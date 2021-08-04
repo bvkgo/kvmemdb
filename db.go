@@ -32,8 +32,7 @@ type DB struct {
 // NOT interpreted as key accesses when committing the transaction.
 //
 // Note that Scan/Ascend/Descend functions could access huge number of keys, so
-// modifications to any one of them will fail the transaction commit. So, use
-// them sparingly. Find* functions can help avoid reading unnecessary keys.
+// modifications to any one of them will fail the transaction commit.
 func (db *DB) NewTx() *Tx {
 	db.mu.RLock()
 	defer db.mu.RUnlock()

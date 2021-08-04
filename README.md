@@ -25,16 +25,6 @@ func main() {
   _ = tx.Set(ctx, "/newkey", old + "new")
   _ = tx.Delete(ctx, "/oldkey")
 
-  // Loop over all files inside /tmp directory using greater-than search repeatedly.
-  prefix := "/tmp/"
-  for {
-    tmpFile, tmpValue, err := tx.FindGT(ctx, prefix);
-    if err != nil || !strings.HasPrefix(tmpFile, "/tmp/") {
-      break
-    }
-    prefix = tmpFile
-  }
-
   // Scan all key-value pairs in the database.
   _ = tx.Scan(ctx, func(_ context.Context, k, v string) error {
     log.Println(k, v)
