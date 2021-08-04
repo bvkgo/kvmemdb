@@ -1,5 +1,7 @@
 # An in-memory Key-Value Database
 
+[![PkgGoDev](https://pkg.go.dev/badge/bvkgo/kvmemdb)](https://pkg.go.dev/github.com/bvkgo/kvmemdb)
+
 This package implements an in-memory key-value store with support for multiple,
 concurrent transactions. Database can be accessed by multiple goroutines
 simultaneously, but individual transactions should only be used by one
