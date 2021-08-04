@@ -5,12 +5,12 @@
 This package implements an in-memory key-value store with support for multiple,
 concurrent transactions. Database can be accessed by multiple goroutines
 simultaneously, but individual transactions should only be used by one
-goroutine (i.e., trasactions are not thread-safe).
+goroutine (i.e., transactions are not thread-safe).
 
 Database also supports user-defined key-format checkers, so that, for example,
-keys can be absolute file paths. In addition, transactions support user-defined
-filters, so that, for example, transactions can be restricted to a subdirectory
-path, etc.
+keys can always be clean, absolute file paths. In addition, transactions
+support user-defined filters, so that, transactions can be restricted to a
+subdirectory path, etc.
 
 ## Example
 

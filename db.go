@@ -42,9 +42,9 @@ func (db *DB) NewTx() *Tx {
 }
 
 // NewFilteredTx creates a transaction with restricted access. Returned
-// transaction can only read/write keys that are allowed by the input filter.
+// transaction can only read/write keys that are allowed by the filter.
 //
-// Filters complement the KeyChecker of the DB with additional control. For
+// Filters complement the database KeyChecker with additional control. For
 // example, a KeyChecker can be used to enforce a file path structure on all
 // keys in the key-value store and transaction filters can limit transactions
 // to specific subdirectories.

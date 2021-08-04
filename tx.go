@@ -25,7 +25,7 @@ func (t *Tx) checkFilter(k string) bool {
 	return t.filter(k)
 }
 
-// Commit applies the transaction changes to the database.
+// Commit applies all transaction updates atomically to the database.
 func (t *Tx) Commit(ctx context.Context) error {
 	if t.db == nil {
 		return sql.ErrTxDone
