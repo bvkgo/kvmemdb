@@ -8,13 +8,18 @@ import (
 )
 
 type DB struct {
-	// KeyChecker, when not nil, enforces user-defined rules on the key
+	// checker, when not nil, enforces user-defined rules on the key
 	// format. Key format is enforced only on insertions into the database, i.e.,
 	// only by a transaction's Set and Delete operations.
-	KeyChecker func(string) bool
+	checker func(string) bool
 
 	mu   sync.RWMutex
 	data kvMap
+}
+
+// New creates an in-memory database with a key format checker.
+func New(keyChecker func(string) bool) *DB {
+	return &DB{checker: keyChecker}
 }
 
 // NewTx creates a read-write transaction on the database. Multiple
@@ -43,10 +48,10 @@ func (db *DB) NewTx() *Tx {
 // NewFilteredTx creates a transaction with restricted access. Returned
 // transaction can only read/write keys that are allowed by the filter.
 //
-// Filters complement the database KeyChecker with additional control. For
-// example, a KeyChecker can be used to enforce a file path structure on all
-// keys in the key-value store and transaction filters can limit transactions
-// to specific subdirectories.
+// Filters complement the database key format checker with additional
+// control. For example, a key format checker can be used to enforce a file
+// path structure on all keys in the key-value store and transaction filters
+// can limit transactions to specific subdirectories.
 func (db *DB) NewFilteredTx(filter func(string) bool) *Tx {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
@@ -59,10 +64,13 @@ func (db *DB) NewFilteredTx(filter func(string) bool) *Tx {
 }
 
 func (db *DB) checkKey(k string) bool {
-	if db.KeyChecker == nil {
+	if len(k) == 0 {
+		return false
+	}
+	if db.checker == nil {
 		return true
 	}
-	return db.KeyChecker(k)
+	return db.checker(k)
 }
 
 func (db *DB) tryCommit(tx *Tx) error {

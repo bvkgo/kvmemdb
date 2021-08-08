@@ -7,6 +7,5 @@ var (
 	_ kv.Writer      = &Tx{}
 	_ kv.Deleter     = &Tx{}
 	_ kv.Scanner     = &Tx{}
-	_ kv.Iterator    = &Tx{}
 	_ kv.Transaction = &Tx{}
 )

@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+// Iterator is the same as kv.Iterator, but duplicated here to avoid importing
+// the kv package.
+type Iterator interface {
+	GetNext(ctx context.Context) (string, string, error)
+}
+
 type Tx struct {
 	db *DB
 
@@ -16,6 +22,16 @@ type Tx struct {
 	accessed kvMap
 
 	filter func(string) bool
+}
+
+type Iter struct {
+	tx *Tx
+
+	i, j int
+
+	ascending bool
+
+	kvs [][2]string
 }
 
 func (t *Tx) checkFilter(k string) bool {
@@ -166,66 +182,107 @@ func (t *Tx) Scan(ctx context.Context, cb func(context.Context, string, string) 
 	return nil
 }
 
-// Ascend calls the user-defined callback function for the selected range in
-// ascending order.
-func (t *Tx) Ascend(ctx context.Context, begin, end string, cb func(context.Context, string, string) error) error {
-	if begin > end || (begin == end && begin != "") {
+// Ascend returns all items in the selected range through iterator.
+func (t *Tx) Ascend(ctx context.Context, ki, kj string, iterator Iterator) error {
+	it, ok := iterator.(*Iter)
+	if !ok {
+		return os.ErrInvalid
+	}
+
+	if ki != "" && kj != "" && ki == kj {
+		*it = Iter{}
 		return nil
+	}
+
+	begin, end := min(ki, kj), max(ki, kj)
+	if ki == "" || kj == "" {
+		begin, end = nonempty(ki, kj), ""
 	}
 
 	kvs := t.allLive(true /* sort */)
 
 	i := 0
 	if len(begin) > 0 {
-		i = sort.Search(len(kvs), func(x int) bool {
-			return kvs[x][0] >= begin
-		})
+		i, _ = bsearch(kvs, begin)
 	}
 
-	j := len(kvs)
+	j := len(kvs) - 1
 	if len(end) > 0 {
-		j = sort.Search(len(kvs), func(x int) bool {
-			return kvs[x][0] >= end
-		})
+		j, _ = bsearch(kvs, end)
+		j--
 	}
 
-	for ; i < j; i++ {
-		t.touch(kvs[i][0])
-		if err := cb(ctx, kvs[i][0], kvs[i][1]); err != nil {
-			return err
-		}
+	if i > j {
+		return os.ErrNotExist
 	}
+	it.tx, it.i, it.j, it.kvs, it.ascending = t, i, j, kvs, true
 	return nil
 }
 
-// Descend calls the user-defined callback function for the selected range in
-// descending order.
-func (t *Tx) Descend(ctx context.Context, begin, end string, cb func(context.Context, string, string) error) error {
-	if begin < end || (begin == end && begin != "") {
+// Descend returns all items in the selected range through an iterator.
+func (t *Tx) Descend(ctx context.Context, ki, kj string, iterator Iterator) error {
+	it, ok := iterator.(*Iter)
+	if !ok {
+		return os.ErrInvalid
+	}
+
+	if ki != "" && kj != "" && ki == kj {
+		*it = Iter{}
 		return nil
 	}
 
+	begin, end := max(ki, kj), min(ki, kj)
+	if ki == "" || kj == "" {
+		begin, end = nonempty(ki, kj), ""
+	}
+
+	var found bool
 	kvs := t.allLive(true /* sort */)
 
 	i := len(kvs) - 1
 	if len(begin) > 0 {
-		i = sort.Search(len(kvs), func(x int) bool {
-			return kvs[x][0] >= begin
-		})
-	}
-
-	j := -1
-	if len(end) > 0 {
-		j = sort.Search(len(kvs), func(x int) bool {
-			return kvs[x][0] >= end
-		})
-	}
-
-	for ; i > j; i-- {
-		t.touch(kvs[i][0])
-		if err := cb(ctx, kvs[i][0], kvs[i][1]); err != nil {
-			return err
+		if i, found = bsearch(kvs, begin); !found {
+			i--
 		}
 	}
+
+	j := 0
+	if len(end) > 0 {
+		if j, found = bsearch(kvs, end); found {
+			j++
+		}
+	}
+
+	if i < j {
+		return os.ErrNotExist
+	}
+
+	it.tx, it.i, it.j, it.kvs, it.ascending = t, i, j, kvs, false
 	return nil
+}
+
+// GetNext returns next element of the iterator. Returns os.ErrNotExist when
+// reaches to the end.
+func (it *Iter) GetNext(ctx context.Context) (string, string, error) {
+	if len(it.kvs) == 0 {
+		return "", "", os.ErrNotExist
+	}
+
+	if it.ascending {
+		if it.i > it.j {
+			return "", "", os.ErrNotExist
+		}
+		k, v := it.kvs[it.i][0], it.kvs[it.i][1]
+		it.tx.touch(k)
+		it.i++
+		return k, v, nil
+	}
+
+	if it.i < it.j {
+		return "", "", os.ErrNotExist
+	}
+	k, v := it.kvs[it.i][0], it.kvs[it.i][1]
+	it.tx.touch(k)
+	it.i--
+	return k, v, nil
 }
