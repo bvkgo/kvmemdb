@@ -6,13 +6,9 @@ import (
 	"os"
 	"sort"
 	"time"
-)
 
-// Iterator is the same as kv.Iterator, but duplicated here to avoid importing
-// the kv package.
-type Iterator interface {
-	GetNext(ctx context.Context) (string, string, error)
-}
+	"github.com/bvkgo/kv"
+)
 
 type Tx struct {
 	db *DB
@@ -171,19 +167,19 @@ func (t *Tx) touch(k string) bool {
 
 // Scan calls the user-defined callback function for every key-value pair in no
 // particular order.
-func (t *Tx) Scan(ctx context.Context, cb func(context.Context, string, string) error) error {
-	kvs := t.allLive(false /* sort */)
-	for _, kv := range kvs {
-		t.touch(kv[0])
-		if err := cb(ctx, kv[0], kv[1]); err != nil {
-			return err
-		}
+func (t *Tx) Scan(ctx context.Context, iterator kv.Iterator) error {
+	it, ok := iterator.(*Iter)
+	if !ok {
+		return os.ErrInvalid
 	}
+
+	kvs := t.allLive(false /* sort */)
+	it.tx, it.i, it.j, it.kvs, it.ascending = t, 0, len(kvs)-1, kvs, true
 	return nil
 }
 
 // Ascend returns all items in the selected range through iterator.
-func (t *Tx) Ascend(ctx context.Context, ki, kj string, iterator Iterator) error {
+func (t *Tx) Ascend(ctx context.Context, ki, kj string, iterator kv.Iterator) error {
 	it, ok := iterator.(*Iter)
 	if !ok {
 		return os.ErrInvalid
@@ -220,7 +216,7 @@ func (t *Tx) Ascend(ctx context.Context, ki, kj string, iterator Iterator) error
 }
 
 // Descend returns all items in the selected range through an iterator.
-func (t *Tx) Descend(ctx context.Context, ki, kj string, iterator Iterator) error {
+func (t *Tx) Descend(ctx context.Context, ki, kj string, iterator kv.Iterator) error {
 	it, ok := iterator.(*Iter)
 	if !ok {
 		return os.ErrInvalid

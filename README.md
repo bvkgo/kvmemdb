@@ -25,17 +25,12 @@ func main() {
   _ = tx.Set(ctx, "/newkey", old + "new")
   _ = tx.Delete(ctx, "/oldkey")
 
-  // Scan all key-value pairs in the database.
-  _ = tx.Scan(ctx, func(_ context.Context, k, v string) error {
-    log.Println(k, v)
-    return nil
-  })
-
   // Iterate over a range in ascending order.
-  tx.Ascend(ctx, "000", "999", func(_ context.context, k, _ string) error {
+  var it Iterator
+  _ = tx.Ascend(ctx, "000", "999", &it)
+  for k, v, err := it.GetNext(); err == nil; k, v, err = it.GetNext() {
     _ = tx.Delete(ctx, k)
-    return nil
-  })
+  }
 
   if err := tx.Commit(ctx); err != nil {
     t.Fatal(err)
