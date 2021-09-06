@@ -1,10 +1,9 @@
 package kvmemdb
 
 import (
+	"fmt"
 	"sync"
 	"time"
-
-	"golang.org/x/xerrors"
 )
 
 type DB struct {
@@ -97,19 +96,19 @@ func (db *DB) tryCommit(tx *Tx) error {
 		// Some other transaction has created a key-value item with same key name
 		// as this transaction.
 		if !snapOK && currOK {
-			return xerrors.Errorf("key %q is also created/deleted by another tx", kv.key)
+			return fmt.Errorf("key %q is also created/deleted by another tx", kv.key)
 		}
 
 		// Some other transaction has deleted a key-value item accessed by this
 		// transaction.
 		if snapOK && !currOK {
-			return xerrors.Errorf("key %q is deleted/deleted by another tx", kv.key)
+			return fmt.Errorf("key %q is deleted/deleted by another tx", kv.key)
 		}
 
 		// Existing key-value pair is not updated or recreated by some other
 		// transaction.
 		if !snap.isEqual(curr) {
-			return xerrors.Errorf("key %q is updated or recreated by another tx", kv.key)
+			return fmt.Errorf("key %q is updated or recreated by another tx", kv.key)
 		}
 
 		// Check if value is modified or not.
