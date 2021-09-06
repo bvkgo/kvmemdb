@@ -81,41 +81,47 @@ func (db *DB) tryCommit(tx *Tx) error {
 
 	// Check that all items accessed by the transaction are unmodified in the
 	// database.
-	for i := range tx.accessed {
-		key := tx.accessed[i].key
-		snap, snapOK := tx.snap.Get(key)
-		curr, currOK := db.data.Get(key)
+	var modified []int
+	for i, kv := range tx.accessed {
+		snap, snapOK := tx.snap.Get(kv.key)
+		curr, currOK := db.data.Get(kv.key)
 
 		// A new key-value pair is created by this transaction. This key-value
 		// pair didn't exist when the transaction has begun and also doesn't exist
 		// when the transaction is to be committed.
 		if !snapOK && !currOK {
+			modified = append(modified, i)
 			continue
 		}
 
 		// Some other transaction has created a key-value item with same key name
 		// as this transaction.
 		if !snapOK && currOK {
-			return xerrors.Errorf("key %q is also created/deleted by another tx", key)
+			return xerrors.Errorf("key %q is also created/deleted by another tx", kv.key)
 		}
 
 		// Some other transaction has deleted a key-value item accessed by this
 		// transaction.
 		if snapOK && !currOK {
-			return xerrors.Errorf("key %q is deleted/deleted by another tx", key)
+			return xerrors.Errorf("key %q is deleted/deleted by another tx", kv.key)
 		}
 
 		// Existing key-value pair is not updated or recreated by some other
 		// transaction.
 		if !snap.isEqual(curr) {
-			return xerrors.Errorf("key %q is updated or recreated by another tx", key)
+			return xerrors.Errorf("key %q is updated or recreated by another tx", kv.key)
+		}
+
+		// Check if value is modified or not.
+		if !curr.isEqual(kv) {
+			modified = append(modified, i)
 		}
 	}
 
 	// Update the database with with the items from the transaction. TODO: We can
 	// avoid sorting multiple times.
-	for _, access := range tx.accessed {
-		db.data = db.data.Set(access.withCommitTime(at))
+	for i := range modified {
+		db.data = db.data.Set(tx.accessed[i].withCommitTime(at))
 	}
 	return nil
 }

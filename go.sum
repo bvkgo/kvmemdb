@@ -1,7 +1,9 @@
-github.com/bvkgo/kv v0.0.0-20210804023308-093a73baf721 h1:xc4oZOXt9ag99Iv1Z9dY6MCVLW5ru6uAYvEM1MNjfLY=
-github.com/bvkgo/kv v0.0.0-20210804023308-093a73baf721/go.mod h1:DJs+HxZ3vV3oYD2ZXYz0EkV3cy2JYDr5Xn9K8wQCPjg=
-github.com/bvkgo/kv v0.0.0-20210808221408-e27312603f8e h1:j3ehAMUrmaAJXpv92DRcuI5lWCmzXwjyziiTcE9S6Gg=
 github.com/bvkgo/kv v0.0.0-20210808221408-e27312603f8e/go.mod h1:DJs+HxZ3vV3oYD2ZXYz0EkV3cy2JYDr5Xn9K8wQCPjg=
+github.com/bvkgo/kv v0.0.0-20210905224340-f9c4ef3f42a8 h1:otf7heknyj5vr0ZazI29eonYr/QUnphlwoqzwux2O/A=
+github.com/bvkgo/kv v0.0.0-20210905224340-f9c4ef3f42a8/go.mod h1:DJs+HxZ3vV3oYD2ZXYz0EkV3cy2JYDr5Xn9K8wQCPjg=
+github.com/bvkgo/kvtests v0.0.0-20210828220332-f7693837214b/go.mod h1:FNdw/8FGRqcNbrMnnwjTPKshVeR8/me1Fyb9jBsuHf0=
+github.com/bvkgo/kvtests v0.0.0-20210906061201-903bb49c6695 h1:IldTsXvDRt65i2/ftRgPXma5UeblDf6AXdqZG3P58Bg=
+github.com/bvkgo/kvtests v0.0.0-20210906061201-903bb49c6695/go.mod h1:F074UerFXcmQOXe5cKwv/zLiqOgk85kreby8e4+34Sk=
 golang.org/x/sync v0.0.0-20210220032951-036812b2e83c h1:5KslGYwFpkhGh+Q16bwMP3cOontH8FOep7tGV86Y7SQ=
 golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 h1:go1bK/D/BFZV2I8cIQd1NKEZ+0owSTG1fDTci4IqFcE=
