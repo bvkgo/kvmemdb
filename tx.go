@@ -48,8 +48,8 @@ func (t *Tx) Commit(ctx context.Context) error {
 	return db.tryCommit(t)
 }
 
-// Rollback drops the transaction.
-func (t *Tx) Rollback(ctx context.Context) error {
+// Discard drops the transaction.
+func (t *Tx) Discard(ctx context.Context) error {
 	if t.db == nil {
 		return sql.ErrTxDone
 	}
